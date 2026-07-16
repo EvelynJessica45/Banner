@@ -1,37 +1,176 @@
-.hero-container .hero-wrapper {
-  max-width: unset;
-  padding: 0;
-}
-
 .hero {
+  --hero-text-color: #000000;
+  --hero-badge-bg: #f7a8d4;
+  --hero-badge-color: #000000;
+  --hero-block-spacing: 3rem;
+  --hero-image-ratio: 1740 / 500; /* matches the authored asset; update if art changes */
+
   position: relative;
-  padding: 40px 24px;
-  min-height: 300px;
+  overflow: hidden;
+  isolation: isolate;
+  aspect-ratio: var(--hero-image-ratio);
+  display: flex;
+  align-items: center;
+  color: var(--hero-text-color);
 }
 
-.hero h1 {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  color: var(--background-color);
+.hero-wrapper + .hero-wrapper {
+  margin-block-start: var(--hero-block-spacing);
 }
 
-.hero picture {
+.hero-content {
+  position: relative;
+  inline-size: 100%;
+  min-height: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.hero-background {
   position: absolute;
-  z-index: -1;
   inset: 0;
-  object-fit: cover;
-  box-sizing: border-box;
+  z-index: 0;
 }
 
-.hero img {
+.hero-background :is(picture, img) {
+  inline-size: 100%;
+  block-size: 100%;
   object-fit: cover;
-  width: 100%;
-  height: 100%;
+  object-position: center;
+  display: block;
 }
 
-@media (width >= 900px) {
+.hero-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgb(255 255 255 / 95%) 0%,
+    rgb(255 255 255 / 70%) 30%,
+    rgb(255 255 255 / 0%) 65%
+  );
+}
+
+.hero-text {
+  position: relative;
+  z-index: 2;
+  max-inline-size: 55%;
+  padding-inline: 3rem;
+  padding-block: 2rem;
+  color: inherit;
+}
+
+.hero-eyebrow {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
+.hero-title {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.hero-meta-icon {
+  display: inline-flex;
+  inline-size: 16px;
+  block-size: 16px;
+  margin-inline-end: 0.15rem;
+  background-color: currentColor;
+  mask-image: url('/icons/cohort.svg');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url('/icons/cohort.svg');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.hero-meta-item:not(:last-child)::after {
+  content: '•';
+  margin: 0 0.5rem;
+  opacity: 0.6;
+}
+
+.hero-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.hero-badge {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  padding-inline: 1.1rem;
+  padding-block: 0.4rem;
+  border-radius: 999px;
+  background: var(--hero-badge-bg);
+  color: var(--hero-badge-color);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hero .is-loading {
+  display: inline-block;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 8%);
+  animation: hero-pulse 1.2s ease-in-out infinite;
+}
+
+.hero-eyebrow.is-loading { inline-size: 30%; block-size: 0.85em; }
+.hero-title.is-loading { inline-size: 70%; block-size: 2em; }
+.hero-meta.is-loading { inline-size: 40%; block-size: 0.9em; }
+.hero-description.is-loading { inline-size: 90%; block-size: 3em; }
+.hero-badge.is-loading { inline-size: 90px; block-size: 1.6em; }
+
+@keyframes hero-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@media (width <= 900px) {
   .hero {
-    padding: 40px 32px;
+    aspect-ratio: auto;
+    min-height: 480px;
+    padding-block: 2rem;
+  }
+
+  .hero-content {
+    flex-direction: column;
+  }
+
+  .hero-background :is(picture, img) {
+    object-position: top right;
+  }
+
+  .hero-text {
+    max-inline-size: 100%;
+    padding-inline: 1.5rem;
+  }
+
+  .hero-badge {
+    position: static;
+    transform: none;
+    display: inline-block;
+    margin-block-start: 0.75rem;
+    margin-inline-start: 1.5rem;
   }
 }
