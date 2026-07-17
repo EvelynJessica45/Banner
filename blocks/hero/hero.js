@@ -69,7 +69,7 @@ export default async function decorate(block) {
     bg.append(data['background image']);
   }
 
-  // eyebrow, title, description - built the same way, keep the elements to update later
+  // eyebrow, title, description:  built the same way, kept the elements to update later
   const els = {};
   const text = document.createElement('div');
   text.className = 'hero-text';
@@ -116,14 +116,14 @@ export default async function decorate(block) {
 
   block.replaceChildren(content);
 
-  // dynamic hero: fetch remote data and swap it in once loaded
+  // dynamic hero
   if (isDynamic && data['data source'] && data['data source'].text) {
     let remote = null;
     try {
       const resp = await fetch(data['data source'].text);
       if (resp.ok) remote = await resp.json();
     } catch {
-      // ignore, just leave the loading skeletons in place
+      // 
     }
 
     if (remote) {
