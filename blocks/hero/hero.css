@@ -1,3 +1,4 @@
+/* Hero container */
 .hero {
   --hero-text-color: #000000;
   --hero-badge-bg: #f7a8d4;
@@ -24,6 +25,7 @@
   align-items: center;
 }
 
+/* Background image */
 .hero-background {
   position: absolute;
   inset: 0;
@@ -47,13 +49,13 @@
   background: linear-gradient(to right, rgb(255 255 255 / 95%) 0%, rgb(255 255 255 / 70%) 30%, rgb(255 255 255 / 0%) 65%);
 }
 
+/* Hero text */
 .hero-text {
   position: relative;
   z-index: 2;
   max-inline-size: 55%;
   padding-inline: 3rem;
   padding-block: 2rem;
-  color: inherit;
 }
 
 .hero-eyebrow { font-weight: 700; font-size: 0.85rem; margin: 0 0 0.5rem; }
@@ -121,6 +123,7 @@
   50% { opacity: 1; }
 }
 
+/* Responsive */
 @media (width >= 1600px) {
   .hero-text { max-inline-size: 42%; }
 }
