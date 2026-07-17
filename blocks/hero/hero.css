@@ -3,9 +3,7 @@
   --hero-badge-bg: #f7a8d4;
   --hero-badge-color: #000000;
   --hero-block-spacing: 3rem;
-  --hero-image-ratio: 1740 / 500; /* matches the authored asset; update if art changes */
-
-  position: relative;
+  --hero-image-ratio: 1740 / 500; 
   overflow: hidden;
   isolation: isolate;
   aspect-ratio: var(--hero-image-ratio);
@@ -46,12 +44,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    to right,
-    rgb(255 255 255 / 95%) 0%,
-    rgb(255 255 255 / 70%) 30%,
-    rgb(255 255 255 / 0%) 65%
-  );
+  background: linear-gradient(to right, rgb(255 255 255 / 95%) 0%, rgb(255 255 255 / 70%) 30%, rgb(255 255 255 / 0%) 65%);
 }
 
 .hero-text {
@@ -63,17 +56,9 @@
   color: inherit;
 }
 
-.hero-eyebrow {
-  font-weight: 700;
-  font-size: 0.85rem;
-  margin: 0 0 0.5rem;
-}
-
-.hero-title {
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
-  font-weight: 700;
-  margin: 0 0 1rem;
-}
+.hero-eyebrow { font-weight: 700; font-size: 0.85rem; margin: 0 0 0.5rem; }
+.hero-title { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; margin: 0 0 1rem; }
+.hero-description { font-size: 1rem; line-height: 1.5; margin: 0; }
 
 .hero-meta {
   display: flex;
@@ -90,26 +75,14 @@
   block-size: 16px;
   margin-inline-end: 0.15rem;
   background-color: currentColor;
-  mask-image: url('/icons/cohort.svg');
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-image: url('/icons/cohort.svg');
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
+  mask: url('/icons/cohort.svg') center / contain no-repeat;
+  -webkit-mask: url('/icons/cohort.svg') center / contain no-repeat;
 }
 
 .hero-meta-item:not(:last-child)::after {
   content: '•';
   margin: 0 0.5rem;
   opacity: 0.6;
-}
-
-.hero-description {
-  font-size: 1rem;
-  line-height: 1.5;
-  margin: 0;
 }
 
 .hero-badge {
@@ -129,48 +102,51 @@
 }
 
 .hero .is-loading {
+  inline-size: var(--skeleton-w, 50%);
+  block-size: var(--skeleton-h, 1em);
   display: inline-block;
   border-radius: 4px;
   background: rgb(0 0 0 / 8%);
   animation: hero-pulse 1.2s ease-in-out infinite;
 }
 
-.hero-eyebrow.is-loading { inline-size: 30%; block-size: 0.85em; }
-.hero-title.is-loading { inline-size: 70%; block-size: 2em; }
-.hero-meta.is-loading { inline-size: 40%; block-size: 0.9em; }
-.hero-description.is-loading { inline-size: 90%; block-size: 3em; }
-.hero-badge.is-loading { inline-size: 90px; block-size: 1.6em; }
+.hero-eyebrow.is-loading { --skeleton-w: 30%; --skeleton-h: 0.85em; }
+.hero-title.is-loading { --skeleton-w: 70%; --skeleton-h: 2em; }
+.hero-meta.is-loading { --skeleton-w: 40%; --skeleton-h: 0.9em; }
+.hero-description.is-loading { --skeleton-w: 90%; --skeleton-h: 3em; }
+.hero-badge.is-loading { --skeleton-w: 90px; --skeleton-h: 1.6em; }
 
 @keyframes hero-pulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
 
+@media (width >= 1600px) {
+  .hero-text { max-inline-size: 42%; }
+}
+
+@media (width <= 1200px) {
+  .hero-text { max-inline-size: 60%; padding-inline: 2rem; }
+}
+
 @media (width <= 900px) {
-  .hero {
-    aspect-ratio: auto;
-    min-height: 480px;
-    padding-block: 2rem;
-  }
+  .hero { aspect-ratio: auto; min-height: 420px; padding-block: 1.75rem; }
+  .hero-content { flex-direction: column; }
+  .hero-background :is(picture, img) { object-position: top right; }
+  .hero-text { max-inline-size: 100%; padding-inline: 1.5rem; }
+  .hero-badge { position: static; transform: none; display: inline-block; margin-block-start: 0.75rem; margin-inline-start: 1.5rem; }
+}
 
-  .hero-content {
-    flex-direction: column;
-  }
+@media (width <= 600px) {
+  .hero { min-height: 360px; padding-block: 1.5rem; }
+  .hero-text { padding-inline: 1rem; }
+  .hero-title { font-size: 1.4rem; }
+  .hero-meta { flex-wrap: wrap; row-gap: 0.35rem; }
+  .hero-description { font-size: 0.9rem; }
+  .hero-badge { font-size: 0.78rem; padding-inline: 0.85rem; margin-inline-start: 1rem; }
+}
 
-  .hero-background :is(picture, img) {
-    object-position: top right;
-  }
-
-  .hero-text {
-    max-inline-size: 100%;
-    padding-inline: 1.5rem;
-  }
-
-  .hero-badge {
-    position: static;
-    transform: none;
-    display: inline-block;
-    margin-block-start: 0.75rem;
-    margin-inline-start: 1.5rem;
-  }
+@media (width <= 360px) {
+  .hero-title { font-size: 1.2rem; }
+  .hero-text { padding-inline: 0.75rem; padding-block: 1.25rem; }
 }

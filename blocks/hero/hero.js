@@ -1,101 +1,87 @@
+import { createOptimizedPicture } from '../../scripts/aem.js';
+
+const TEXT_FIELDS = [
+  { key: 'eyebrow', tag: 'p', cls: 'hero-eyebrow' },
+  { key: 'title', tag: 'h1', cls: 'hero-title' },
+  { key: 'description', tag: 'p', cls: 'hero-description', html: true },
+];
+
+function toKey(label) {
+  return label.trim().toLowerCase().replace(/\s+/g, '');
+}
 
 function parseRows(block) {
   const data = {};
-  [...block.children].forEach((row) => {
-    const cell = row.querySelector('div');
-    if (!cell) return;
-
+  block.querySelectorAll(':scope > div > div').forEach((cell) => {
     const strong = cell.querySelector('strong');
     if (!strong) return;
 
-    const key = strong.textContent.trim().toLowerCase().replace(/\s+/g, '');
     const picture = cell.querySelector('picture');
-
     if (picture instanceof HTMLPictureElement) {
-      data[key] = picture;
+      data[toKey(strong.textContent)] = picture;
       return;
     }
 
-    const p = cell.querySelector('p') || cell;
-    const clone = p.cloneNode(true);
+    const clone = cell.cloneNode(true);
     clone.querySelector('strong')?.remove();
-
-    const html = clone.innerHTML.trim().replace(/^(<br\s*\/?>)+/i, '').trim();
-    const text = clone.textContent.trim();
-
-    data[key] = { html, text };
+    data[toKey(strong.textContent)] = {
+      html: clone.innerHTML.trim().replace(/^(<br\s*\/?>)+/, '').trim(),
+      text: clone.textContent.trim(),
+    };
   });
   return data;
+}
+
+function optimizeBackgroundImage(picture, eager) {
+  const img = picture?.querySelector('img');
+  if (!img) return picture;
+  return createOptimizedPicture(img.src, img.alt || '', eager, [{ width: '2000' }, { width: '750' }]);
 }
 
 function buildMeta(metaText) {
   const p = document.createElement('p');
   p.className = 'hero-meta';
-
-  const fragment = document.createDocumentFragment();
-
   const icon = document.createElement('span');
   icon.className = 'hero-meta-icon';
   icon.setAttribute('aria-hidden', 'true');
-  fragment.append(icon);
-
-  metaText.split('|').map((s) => s.trim()).filter(Boolean).forEach((text) => {
+  const items = metaText.split('|').map((s) => s.trim()).filter(Boolean).map((label) => {
     const item = document.createElement('span');
     item.className = 'hero-meta-item';
-    item.textContent = text;
-    fragment.append(item);
+    item.textContent = label;
+    return item;
   });
-
-  p.append(fragment);
+  p.append(icon, ...items);
   return p;
 }
 
-function buildHero(data, isDynamic) {
+function buildField({ tag, cls, html }, fieldData, isDynamic) {
+  const el = document.createElement(tag);
+  el.className = cls;
+  if (fieldData) el[html ? 'innerHTML' : 'textContent'] = fieldData[html ? 'html' : 'text'];
+  else if (isDynamic) el.classList.add('is-loading');
+  return el;
+}
+
+function buildHero(data, { isDynamic, eager }) {
   const content = document.createElement('div');
   content.className = 'hero-content';
 
   const bg = document.createElement('div');
   bg.className = 'hero-background';
   if (data.backgroundimage instanceof HTMLPictureElement) {
-    bg.append(data.backgroundimage);
+    bg.append(optimizeBackgroundImage(data.backgroundimage, eager));
   }
 
   const text = document.createElement('div');
   text.className = 'hero-text';
+  const [eyebrow, title] = TEXT_FIELDS.slice(0, 2).map((f) => buildField(f, data[f.key], isDynamic));
+  const description = buildField(TEXT_FIELDS[2], data.description, isDynamic);
+  const meta = data.meta
+    ? buildMeta(data.meta.text)
+    : isDynamic ? Object.assign(document.createElement('p'), { className: 'hero-meta is-loading' }) : null;
 
-  const eyebrow = document.createElement('p');
-  eyebrow.className = 'hero-eyebrow';
-  if (data.eyebrow) eyebrow.textContent = data.eyebrow.text;
-  else if (isDynamic) eyebrow.classList.add('is-loading');
-
-  const title = document.createElement('h1');
-  title.className = 'hero-title';
-  if (data.title) title.textContent = data.title.text;
-  else if (isDynamic) title.classList.add('is-loading');
-
-  let meta = null;
-  if (data.meta) {
-    meta = buildMeta(data.meta.text);
-  } else if (isDynamic) {
-    meta = document.createElement('p');
-    meta.className = 'hero-meta is-loading';
-  }
-
-  
-  const description = document.createElement('p');
-  description.className = 'hero-description';
-  if (data.description) description.innerHTML = data.description.html;
-  else if (isDynamic) description.classList.add('is-loading');
-
-  const textFragment = document.createDocumentFragment();
-  textFragment.append(eyebrow, title);
-  if (meta) textFragment.append(meta);
-  textFragment.append(description);
-  text.append(textFragment);
-
-  const contentFragment = document.createDocumentFragment();
-  contentFragment.append(bg, text);
-  content.append(contentFragment);
+  text.append(eyebrow, title, ...(meta ? [meta] : []), description);
+  content.append(bg, text);
 
   if (data.badge || isDynamic) {
     const badge = document.createElement('span');
@@ -114,46 +100,43 @@ async function fetchHeroData(path) {
     if (!resp.ok) throw new Error(`Hero data fetch failed: ${resp.status}`);
     return await resp.json();
   } catch (err) {
-    console.error('[hero] Unable to load dynamic content', err);
+    console.error(' Unable to load dynamic content', err);
     return null;
   }
 }
 
 function applyRemoteData(block, remote) {
-  const setText = (selector, value) => {
-    if (value == null) return;
-    const el = block.querySelector(selector);
+  TEXT_FIELDS.forEach(({ key, cls }) => {
+    if (remote[key] == null) return;
+    const el = block.querySelector(`.${cls}`);
     if (!el) return;
-    el.textContent = value;
+    el.textContent = remote[key];
     el.classList.remove('is-loading');
-    el.removeAttribute('aria-hidden');
-  };
+  });
 
-  setText('.hero-eyebrow', remote.eyebrow);
-  setText('.hero-title', remote.title);
-  setText('.hero-description', remote.description);
-  setText('.hero-badge', remote.badge);
+  if (remote.badge != null) {
+    const el = block.querySelector('.hero-badge');
+    if (el) {
+      el.textContent = remote.badge;
+      el.classList.remove('is-loading');
+    }
+  }
 
   if (remote.meta) {
-    const oldMeta = block.querySelector('.hero-meta');
-    const newMeta = buildMeta(remote.meta);
-    if (oldMeta) oldMeta.replaceWith(newMeta);
+    block.querySelector('.hero-meta')?.replaceWith(buildMeta(remote.meta));
   }
 }
 
 export default async function decorate(block) {
   const isDynamic = block.classList.contains('dynamic');
+  const eager = document.querySelector('.hero') === block;
   const rowData = parseRows(block);
 
-  block.replaceChildren(buildHero(rowData, isDynamic));
+  block.replaceChildren(buildHero(rowData, { isDynamic, eager }));
 
-  if (!isDynamic) return;
-
-  const dataSource = rowData.datasource?.text;
+  const dataSource = isDynamic && rowData.datasource?.text;
   if (!dataSource) return;
 
   const remote = await fetchHeroData(dataSource);
-  if (!remote) return;
-
-  applyRemoteData(block, remote);
+  if (remote) applyRemoteData(block, remote);
 }
